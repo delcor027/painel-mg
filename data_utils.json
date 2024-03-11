@@ -1,0 +1,23 @@
+{
+  "cities": [
+    "Vila Velha",
+    "Cariacica",
+    "Vitória",
+    "Serra",
+    "Guarapari, Viana"
+  ],
+  "acabamentos": [
+    {
+      "tipo": "Reto",
+      "preco": 60
+    },
+    {
+      "tipo": "Boleado",
+      "preco": 80
+    },
+    {
+      "tipo": "Meia Esquadria",
+      "preco": 85
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "painel-marmoraria"
+version = "0.1.0"
+description = "Um painel para a MG Marmoraria para facilitar a medição no  orçamento dentre diversas outras possibilidades."
+authors = ["Delcor <matheusdelcorbm@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
