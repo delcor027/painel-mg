@@ -1,20 +1,12 @@
 from PIL import Image
 import streamlit as st
-from calculator import calculate_price
-import json
+from budget import Budget, BudgetItem
 
-# Carregando sa listas dos arquivos JSON
-with open('data_utils.json', encoding='utf-8') as data_file:
-    data = json.load(data_file)
-    cities_list = data['cities']
-    acabamentos_list = data['acabamentos']
+budget = Budget()
 
 icon = Image.open('favicon.ico')
-st.set_page_config(
-    page_title='MG Marmoraria', page_icon=icon,
-    layout="centered")
+st.set_page_config(page_title='MG Marmoraria', page_icon=icon, layout="centered")
 
-# Menu na barra lateral
 menu = st.sidebar.selectbox('Menu', ['Home', 'Orçamento'])
 
 if menu == 'Home':
@@ -23,46 +15,39 @@ if menu == 'Home':
 
 elif menu == 'Orçamento':
     st.title('Orçamento')
-    # Entradas para nome do cliente e localização
     client_name = st.text_input('Nome do Cliente')
-    client_location = st.selectbox('Localização do Cliente', cities_list)
-    
-    # Valor fixo por metro de acabamento (em centímetros)
-    fixed_acabamento_price_per_cm = 1.0
-    
-    # Entrada de dimensões em centímetros
-    length_cm = st.number_input('Comprimento (cm)', min_value=0.0, format="%.0f")
-    width_cm = st.number_input('Largura (cm)', min_value=0.0, format="%.0f")
-    
-    # Seleção do tipo de acabamento
-    tipo_acabamento_options = [acabamento['tipo'] for acabamento in acabamentos_list]
-    tipo_acabamento = st.selectbox('Tipo de Acabamento', tipo_acabamento_options)
-    
-    # Entrada para a quantidade de centímetros de acabamento
-    acabamento_cm = st.number_input('Acabamento (cm)', min_value=0.0, format="%.0f")
+    client_location = st.selectbox('Localização do Cliente', budget.get_cities_list())
 
-    # Conversão de centímetros para metros para as dimensões
-    length_m = length_cm / 100
-    width_m = width_cm / 100
-    acabamento_m = acabamento_cm / 100
+    service_type = st.selectbox('Tipo de Serviço', ['Selecione', 'Bancadas', 'Pias', 'Peças Retas'])
 
-    # Entrada de preço por metro quadrado pelo usuário
-    price_per_meter = st.number_input('Preço por metro quadrado (R$)', min_value=0.0, format="%.2f")
-
-    # Botão para cálculo do preço
-    if st.button('Calcular Preço'):
-        # Calculando o preço base da área
-        price_area = calculate_price(length_m, width_m, price_per_meter)
+    if service_type in ['Bancadas', 'Pias']:
+        length_cm = st.number_input('Comprimento (cm)', min_value=0.0, format="%.0f")
+        width_cm = st.number_input('Largura (cm)', min_value=0.0, format="%.0f")
+        price_per_meter = st.number_input('Preço por metro quadrado (R$)', min_value=0.0, format="%.2f")
         
-        # Encontrar o preço por centímetro do acabamento selecionado
-        acabamento_info = next((item for item in acabamentos_list if item['tipo'] == tipo_acabamento), None)
-        if acabamento_info is not None:
-            # Cálculo do custo de acabamento baseado na quantidade em centímetros
-            acabamento_cost = acabamento_m * acabamento_info['preco']
-        else:
-            # Caso não encontre o acabamento, defina o custo como 0
-            acabamento_cost = 0
+        if service_type == 'Bancadas':
+            saia_length_cm = st.number_input('Saia Comprimento (cm)', min_value=0.0, format="%.0f")
+            saia_width_cm = st.number_input('Saia Largura (cm)', min_value=0.0, format="%.0f")
+            budget.add_item(BudgetItem(saia_length_cm, saia_width_cm, price_per_meter))
         
-        # Calculando o preço total incluindo o custo de acabamento
-        total_price = price_area + acabamento_cost
-        st.success(f'O preço estimado é R${total_price:.2f}')
+        rodabanca_length_cm = st.number_input('Rodabanca Comprimento (cm)', min_value=0.0, format="%.0f")
+        rodabanca_width_cm = st.number_input('Rodabanca Largura (cm)', min_value=0.0, format="%.0f")
+        budget.add_item(BudgetItem(rodabanca_length_cm, rodabanca_width_cm, price_per_meter))
+
+        tipo_acabamento = st.selectbox('Tipo de Acabamento', budget.get_acabamento_types())
+        acabamento_cm = st.number_input('Acabamento (cm)', min_value=0.0, format="%.0f")
+
+        include_sink = st.checkbox('Incluir Cuba')
+        sink_price = 0
+        if include_sink:
+            sink_price = st.number_input('Valor da Cuba (R$)', min_value=0.0, format="%.2f")
+
+        if st.button('Calcular Preço'):
+            main_item = BudgetItem(length_cm, width_cm, price_per_meter)
+            budget.add_item(main_item)
+            total_price = budget.calculate_total_price(tipo_acabamento, acabamento_cm, sink_price)
+            st.success(f'O preço estimado é R${total_price:.2f}')
+
+    elif service_type == 'Peças Retas':
+        # Lógica específica para 'Peças Retas'
+        pass
