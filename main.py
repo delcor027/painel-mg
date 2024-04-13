@@ -1,5 +1,7 @@
 from PIL import Image
 import streamlit as st
+from fpdf import FPDF
+import base64
 from budget import Budget, BudgetItem
 
 budget = Budget()
@@ -48,6 +50,30 @@ elif menu == 'Orçamento':
             total_price = budget.calculate_total_price(tipo_acabamento, acabamento_cm, sink_price)
             st.success(f'O preço estimado é R${total_price:.2f}')
 
+            # Gerar arquivo PDF
+            pdf = FPDF()
+            pdf.add_page()
+            pdf.set_font("Arial", size=12)
+
+            pdf.cell(200, 10, txt=f"Cliente: {client_name}", ln=True)
+            pdf.cell(200, 10, txt=f"Localização do Cliente: {client_location}", ln=True)
+            pdf.cell(200, 10, txt=f"Tipo de Serviço: {service_type}", ln=True)
+
+            # Adicione mais informações específicas para cada tipo de serviço (bancadas, pias, peças retas, etc.)
+
+            pdf.cell(200, 10, txt=f"Preço Total: R${total_price:.2f}", ln=True)
+
+            # Salvar o PDF em um arquivo temporário
+            pdf_output = "temp_orcamento.pdf"
+            pdf.output(pdf_output)
+
+            # Carregar o arquivo PDF como base64 para permitir o download
+            with open(pdf_output, "rb") as pdf_file:
+                pdf_base64 = base64.b64encode(pdf_file.read()).decode()
+
+            # Exibir o link de download
+            st.markdown(f'<a href="data:application/octet-stream;base64,{pdf_base64}" download="orcamento.pdf">Baixar Orçamento</a>', unsafe_allow_html=True)
+    
     elif service_type == 'Peças Retas':
         # Lógica específica para 'Peças Retas'
         pass
